@@ -37,11 +37,12 @@ from os.path import join
 from numpy.distutils.core import setup, Extension
 
 #setup to make Tmatrix fortran code
-tmat_dir = os.path.dirname(os.path.realpath(__file__)) #current file location
-tmat_dir = join(tmat_dir,'holopy','scattering','theory','tmatrix_f')
+tmat_dir = join('holopy','scattering','theory','tmatrix_f')
 if os.name == 'nt':
+    make=['mingw32-make']
     tmat_file = 'S.exe'
 else:
+    make=['make']
     tmat_file = 'S'
 
 # this will automatically build the scattering extensions, using the
@@ -76,10 +77,10 @@ except ImportError:
 
 if __name__ == "__main__":
 
-    #if not hasattr(sys, 'real_prefix'):
+    if not hasattr(sys, 'real_prefix'):
         #we are not in a virtual_env.
         #compile Tmatrix fortran code
-        #subprocess.check_output('flang -o S.exe S.lp.f lpq.f', cwd=tmat_dir)
+        #subprocess.check_call(make, cwd=tmat_dir)
 
     requires=[l for l in open("requirements.txt").readlines() if l[0] != '#']
     setup(configuration=configuration,
