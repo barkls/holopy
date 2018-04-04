@@ -39,10 +39,8 @@ from numpy.distutils.core import setup, Extension
 #setup to make Tmatrix fortran code
 tmat_dir = join('holopy','scattering','theory','tmatrix_f')
 if os.name == 'nt':
-    make=['mingw32-make']
     tmat_file = 'S.exe'
 else:
-    make=['make']
     tmat_file = 'S'
 
 # this will automatically build the scattering extensions, using the
@@ -80,10 +78,7 @@ if __name__ == "__main__":
     if not hasattr(sys, 'real_prefix'):
         #we are not in a virtual_env.
         #compile Tmatrix fortran code
-        try:
-            subprocess.check_call(make, cwd=tmat_dir)
-        except:
-            pass
+        subprocess.check_call('make', cwd=tmat_dir)
 
     requires=[l for l in open("requirements.txt").readlines() if l[0] != '#']
     setup(configuration=configuration,
