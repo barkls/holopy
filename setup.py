@@ -77,7 +77,7 @@ except ImportError:
 
 if __name__ == "__main__":
 
-    if not hasattr(sys, 'real_prefix'):
+    #if not hasattr(sys, 'real_prefix'):
         #we are not in a virtual_env.
         #compile Tmatrix fortran code
         #subprocess.check_call(make, cwd=tmat_dir)
