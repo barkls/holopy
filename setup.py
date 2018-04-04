@@ -79,10 +79,7 @@ if __name__ == "__main__":
     if not hasattr(sys, 'real_prefix'):
         #we are not in a virtual_env.
         #compile Tmatrix fortran code
-        try:
-            subprocess.check_call('make', cwd=tmat_dir)
-        except:
-            raise OSError("Solomon couldn't find: "+tmat_dir+". here's what's in it "+', '.join(os.listdir(tmat_dir)))
+        subprocess.check_output('make', cwd=tmat_dir)
 
     requires=[l for l in open("requirements.txt").readlines() if l[0] != '#']
     setup(configuration=configuration,
