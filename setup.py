@@ -82,7 +82,7 @@ if __name__ == "__main__":
         try:
             subprocess.check_call('make', cwd=tmat_dir)
         except:
-            raise OSError("Solomon couldn't find: "+os.listdir(tmat_dir))
+            raise OSError("Solomon couldn't find: "+tmat_dir+". here's what's in it"+os.listdir(tmat_dir))
 
     requires=[l for l in open("requirements.txt").readlines() if l[0] != '#']
     setup(configuration=configuration,
