@@ -886,7 +886,8 @@ c  idir=2:
 c        a_{mnp} = e^{-i m alpha} sum_k (-1)^(m+k) d^k_{mn}(beta) a_{knp}
 c
       subroutine rotvec(alpha,cbe,nmax,mmax,amn,idir)
-      include'scfodim.for'
+      parameter(npd=20,nod=32,notd=70)
+c     changed from include'scfodim.for'
       parameter(nbtd=notd*(notd+2),nbc=4*notd+4)
       implicit real*8(a-h,o-z)
       real*8 dc(-notd:notd,-notd:notd)
