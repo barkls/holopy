@@ -37,7 +37,8 @@ from os.path import join
 from numpy.distutils.core import setup, Extension
 
 #setup to make Tmatrix fortran code
-tmat_dir = join('holopy','scattering','theory','tmatrix_f')
+tmat_dir = os.path.dirname(os.path.realpath(__file__)) #current file location
+tmat_dir = join(tmat_dir,'holopy','scattering','theory','tmatrix_f')
 if os.name == 'nt':
     tmat_file = 'S.exe'
 else:
