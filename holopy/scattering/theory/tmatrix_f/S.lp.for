@@ -12,9 +12,9 @@ C      but this is corrected for in HoloPy:holopy/scattering/theory/tmatrix.py
 C   6. The Phase matrix part of the calculation is removed.
 C
 C   To compile with gfortran, use the following lines after cd-ing into the
-C   directory containing S.lp.f lpd.f and ampld.par.f (holopy/scattering/theory/tmatrix_extendedprecision/)
-C       ifort -c S.lp.f lpq.f
-C       ifort -o S.exe S.lp.o lpq.o
+C   directory containing S.lp.f lpd.f and ampld.par.f (holopy/scattering/theory/tmatrix_doubleprecision/)
+C       gfortran -c S.lp.f lpd.f
+C       gfortran -o S.exe S.lp.o lpd.o
 C   This should create an executable, S.exe.
 
 C***********************************************************************************
@@ -27,19 +27,19 @@ C   We thank Cory Davis (University of Edinburgh) for pointing
 C   out the possibility of replacing the proprietary NAG matrix
 C   inversion routine by the public-domain LAPACK equivalent.
 
-C   CALCULATION OF THE AMPLITUDE AND PHASE MATRICES FOR
-C   A PARTICLE WITH AN AXIALLY SYMMETRIC SHAPE
-
-C   This version of the code uses EXTENDED PRECISION variables,
-C   is applicable to spheroids, finite circular cylinders,
+C   CALCULATION OF THE AMPLITUDE AND PHASE MATRICES FOR                 
+C   A PARTICLE WITH AN AXIALLY SYMMETRIC SHAPE                   
+                                                                       
+C   This version of the code uses DOUBLE PRECISION variables,          
+C   is applicable to spheroids, finite circular cylinders,            
 C   Chebyshev particles, and generalized Chebyshev particles
-C   (distorted water drops), and must be used along with the
-C   accompanying files lpq.f and amplq.par.f.
-
-C   Last update 08/06/2005 
-
-C   The code has been developed by Michael Mishchenko at the NASA      
-C   Goddard Institute for Space Studies, New York.  The development    
+C   (distorted water drops), and must be used along with the 
+C   accompanying files lpd.f and ampld.par.f.                
+                                                                       
+C   Last update 08/06/2005                                               
+                                                                       
+C   The code has been developed by Michael Mishchenko at the NASA
+C   Goddard Institute for Space Studies, New York.  The development
 C   of the code was supported by the NASA Radiation Sciences Program.
 
 C   The code can be used without limitations in any not-for-
@@ -47,32 +47,32 @@ C   profit scientific research.  We only request that in any
 C   publication using the code the source of the code be acknowledged
 C   and relevant references (see below) be made.
 
-C   The computational method is based on the T-matrix approach         
-C   [P. C. Waterman, Phys. Rev. D 3, 825 (1971)], also known as        
-C   the extended boundary condition method.  The method was            
-C   improved in the following papers:                         
-                                                                       
-C   1.  M. I. Mishchenko and L. D. Travis, T-matrix computations       
-C       of light scattering by large spheroidal particles,             
-C       Opt. Commun., vol. 109, 16-21 (1994).                          
-C                                                                      
-C   2.  M. I. Mishchenko, L. D. Travis, and A. Macke, Scattering       
-C       of light by polydisperse, randomly oriented, finite            
-C       circular cylinders, Appl. Opt., vol. 35, 4927-4940 (1996).     
-C                                                                      
-C   3.  D. J. Wielaard, M. I. Mishchenko, A. Macke, and B. E. Carlson, 
-C       Improved T-matrix computations for large, nonabsorbing and     
-C       weakly absorbing nonspherical particles and comparison         
-C       with geometrical optics approximation, Appl. Opt., vol. 36,    
-C       4305-4313 (1997).                                             
-C                                                                      
-C   A general review of the T-matrix approach can be found in          
-C                                                                      
-C   4.  M. I. Mishchenko, L. D. Travis, and D. W. Mackowski,           
-C       T-matrix computations of light scattering by nonspherical      
-C       particles:  a review, J. Quant. Spectrosc. Radiat.             
-C       Transfer, vol. 55, 535-575 (1996).                             
-C                                                                      
+C   The computational method is based on the T-matrix approach
+C   [P. C. Waterman, Phys. Rev. D 3, 825 (1971)], also known as
+C   the extended boundary condition method.  The method was
+C   improved in the following papers:
+
+C   1.  M. I. Mishchenko and L. D. Travis, T-matrix computations
+C       of light scattering by large spheroidal particles,
+C       Opt. Commun., vol. 109, 16-21 (1994).
+C
+C   2.  M. I. Mishchenko, L. D. Travis, and A. Macke, Scattering
+C       of light by polydisperse, randomly oriented, finite
+C       circular cylinders, Appl. Opt., vol. 35, 4927-4940 (1996).
+C
+C   3.  D. J. Wielaard, M. I. Mishchenko, A. Macke, and B. E. Carlson,
+C       Improved T-matrix computations for large, nonabsorbing and
+C       weakly absorbing nonspherical particles and comparison
+C       with geometrical optics approximation, Appl. Opt., vol. 36,
+C       4305-4313 (1997).
+C
+C   A general review of the T-matrix approach can be found in
+C
+C   4.  M. I. Mishchenko, L. D. Travis, and D. W. Mackowski,
+C       T-matrix computations of light scattering by nonspherical
+C       particles:  a review, J. Quant. Spectrosc. Radiat.
+C       Transfer, vol. 55, 535-575 (1996).
+C
 C   Additional useful information is contained in the paper
 C
 C   5.  M. I. Mishchenko and L. D. Travis, Capabilities and
@@ -99,21 +99,23 @@ C   Light by Small Particles" (Cambridge University Press, Cambridge,
 C   2002) is also available in the .pdf format at the web site
 C
 C   http://www.giss.nasa.gov/~crmim/books.html
-                                                                       
+
 C   One of the main advantages of the T-matrix method is that the      
 C   T-matrix for a given nonspherical particle needs to be computed    
 C   only once and then can be used any number of times for computing   
 C   the amplitude and phase matrices for any directions of the incident 
-C   and the scattered beams.  This makes the T-matrix method           
+C   and scattered beams.  This makes the T-matrix method           
 C   extremely convenient and efficient in averaging over particle      
 C   orientations and/or directions of incidence (or scattering).       
                                                                        
-C   Since this code uses extended precision variables, it is slower    
-C   than the equivalent double-precision code.  The double-precision   
-C   code is also available, but it cannot compute as large particles   
-C   for the same shape, refractive index, and wavelength               
-C   as this code.  On IBM RISC workstations, this code is approximately
-C   5-8 times slower than the double-precision code.  However, the     
+C   The use of extended precision variables (Ref. 1) can significantly
+C   increase the maximum convergent equivalent-sphere size parameter 
+C   and make it well larger than 100 (depending on refractive index    
+C   and aspect ratio).  The extended-precision code is also available. 
+C   However, the use of extended precision varibales results in a      
+C   greater consumption of CPU time.                                   
+C   On IBM RISC workstations, that code is approximately               
+C   five times slower than this double-precision code.  The            
 C   CPU time difference between the double-precision and extended-     
 C   precision codes can be larger on supercomputers.                   
                                                                        
@@ -130,8 +132,8 @@ C   scheme. LAPACK stands for Linear Algebra PACKage. The latter is
 C   publicly available at the following internet site:
 C
 C   http://www.netlib.org/lapack/
-
-
+ 
+                                                                       
 C   INPUT PARAMETERS:                                                  
 C                                                                      
 C      AXI - equivalent-sphere radius                                  
@@ -151,14 +153,14 @@ C             For cylinders NP=-2 and EPS is the ratio of the
 C                 diameter to the length.                              
 C             For Chebyshev particles NP must be positive and 
 C                 is the degree of the Chebyshev polynomial, while     
-C                 EPS is the deformation parameter (Ref. 5).          
+C                 EPS is the deformation parameter (Ref. 5).                    
 C             For generalized Chebyshev particles (describing the shape
 C                 of distorted water drops) NP=-3.  The coefficients
 C                 of the Chebyshev polynomial expansion of the particle
 C                 shape (Ref. 7) are specified in subroutine DROP.
 C      DDELT - accuracy of the computations                            
 C      NDGS - parameter controlling the number of division points      
-C             in computing integrals over the particle surface (Ref. 5).   
+C             in computing integrals over the particle surface (Ref. 5).        
 C             For compact particles, the recommended value is 2.       
 C             For highly aspherical particles larger values (3, 4,...) 
 C             may be necessary to obtain convergence.                  
@@ -168,9 +170,9 @@ C             different NDGS-values are recommended.
 C      ALPHA and BETA - Euler angles (in degrees) specifying the orientation 
 C            of the scattering particle relative to the laboratory reference
 C            frame (Refs. 6 and 7).
-C      THET0 - zenith angle of the incident beam in degrees   
-C      THET - zenith angle of the scattered beam in degrees      
-C      PHI0 - azimuth angle of the incident beam in degrees     
+C      THET0 - zenith angle of the incident beam in degrees
+C      THET - zenith angle of the scattered beam in degrees    
+C      PHI0 - azimuth angle of the incident beam in degrees    
 C      PHI - azimuth angle of the scattered beam in degrees   
 C            (Refs. 6 and 7)
 C      ALPHA, BETA, THET0, THET, PHI0, and PHI are specified at the end of
@@ -182,7 +184,7 @@ C      The part of the main program following the line
 C                                                                      
 C       "COMPUTATION OF THE AMPLITUDE AND PHASE MATRICES"               
 C                                                                      
-C      can be repeated any number of times.  By this time the T-matrix 
+C      can be repeated any number of times.  At this point the T-matrix 
 C      for the given scattering particle has already     
 C      been fully computed and can be repeatedly used in computations  
 C      for any directions of illumination and scattering and any particle
@@ -190,99 +192,15 @@ C      orientations.
                                                                        
 C   OUTPUT PARAMETERS:                                                 
 C                                                                      
-C      Elements of the 2x2 amplitude matrix       
-C      Elements of the 4x4 phase matrix
+C      Elements of the 2x2 amplitude matrix ONLY      
                                                                        
 C   Note that LAM and AXI must be given in the same units of length        
-C   (e.g., microns).                       
-                                                                       
-C   The convergence of the T-matrix method for particles with          
-C   different sizes, refractive indices, and aspect ratios can be      
-C   dramatically different.  Usually, large sizes and large aspect     
-C   ratios cause problems.  The user of this code                      
-C   should "play" a little with different input parameters in          
-C   order to get an idea of the range of applicability of this         
-C   technique.  Sometimes decreasing the aspect ratio                  
-C   from 3 to 2 can increase the maximum convergent equivalent-        
-C   sphere size parameter by a factor of several.                      
-                                                                       
-C   The CPU time required rapidly increases with increasing ratio      
-C   radius/wavelength and/or with increasing particle asphericity.     
-C   This should be taken into account in planning massive computations.
-                                                                       
-C   Execution can be automatically terminated if dimensions of certain 
-C   arrays are not big enough or if the convergence procedure decides  
-C   that the accuracy of extended-precision variables is insufficient  
-C   to obtain a converged T-matrix solution for given particles.       
-C   In all cases, a message appears explaining                         
-C   the cause of termination.                                          
-                                                                       
-C   The message                                                        
-C        "WARNING:  W IS GREATER THAN 1"                               
-C   means that the single-scattering albedo exceeds the maximum        
-C   possible value 1.  If W is greater than 1 by more than             
-C   DDELT, this message can be an indication of numerical              
-C   instability caused by extreme values of particle parameters.       
-                                                                       
-C   The message "WARNING: NGAUSS=NPNG1" means that convergence over
-C   the parameter NG (see Ref. 2) cannot be obtained for the NPNG1
-C   value specified in the PARAMETER statement in the file amplq.par.f.
-C   Often this is not a serious problem, especially for compact
-C   particles.
+C   (e.g., microns). 
 
-C   Larger and/or more aspherical particles may require larger
-C   values of the parameters NPN1, NPN4, and NPNG1 in the file
-C   amplq.par.f.  It is recommended to keep NPN1=NPN4+25 and
-C   NPNG1=3*NPN1.  Note that the memory requirement increases
-C   as the third power of NPN4. If the memory of
-C   a computer is too small to accomodate the code in its current
-C   setting, the parameters NPN1, NPN4, and NPNG1 should be
-C   decreased. However, this will decrease the maximum size parameter
-C   that can be handled by the code.
-                                                                       
-C   In some cases any increases of NPN1 will not make the T-matrix     
-C   computations convergent.  This means that the particle is just     
-C   too "bad" (extreme size parameter and/or extreme aspect ratio      
-C   and/or extreme refractive index).                                  
-C   The main program contains several PRINT statements which are       
-C   currently commentd out.  If uncommented, these statements will     
-C   produce numbers which show the convergence rate and can be         
-C   used to determine whether T-matrix computations for given particle 
-C   parameters will converge at all, whatever the parameter NPN1 is.   
-                                                                       
-C   Some of the common blocks are used to save memory rather than      
-C   to transfer data.  Therefore, if a compiler produces a warning     
-C   message that the lengths of a common block are different in        
-C   different subroutines, this is not a real problem.                 
-                                                                       
-C   The recommended value of DDELT is 0.001.  For bigger values,       
-C   false convergence can be obtained.                                 
-                                                                       
-C   In computations for spheres, use EPS=1.000001 instead of EPS=1.    
-C   EPS=1 can cause overflows in some rare cases.                      
-                                                                       
-C   For some compilers, DACOS must be raplaced by DACOS and DASIN     
-C   by DARSIN.                                                         
-                                                                       
-C   I would highly appreciate informing me of any problems encountered 
-C   with this code.  Please send your message to the following         
-C   e-mail address:  CRMIM@GISS.NASA.GOV.                              
-
-C   WHILE THE COMPUTER PROGRAM HAS BEEN TESTED FOR A VARIETY OF CASES,
-C   IT IS NOT INCONCEIVABLE THAT IT CONTAINS UNDETECTED ERRORS. ALSO,
-C   INPUT PARAMETERS CAN BE USED WHICH ARE OUTSIDE THE ENVELOPE OF
-C   VALUES FOR WHICH RESULTS ARE COMPUTED ACCURATELY. FOR THIS REASON,
-C   THE AUTHORS AND THEIR ORGANIZATION DISCLAIM ALL LIABILITY FOR
-C   ANY DAMAGES THAT MAY RESULT FROM THE USE OF THE PROGRAM. 
-
- 
       IMPLICIT REAL*8 (A-H,O-Z)
-      PARAMETER (NPN1=200, NPNG1=600, NPNG2=2*NPNG1, NPN2=2*NPN1,  
-     &           NPL=NPN2+1, NPN3=NPN1+1,  
-     &           NPN4=NPN1, NPN5=2*NPN4, NPN6=NPN4+1)
-C   changed from      INCLUDE 'amplq.par.f'
-      REAL*16 LAM,MRR,MRI,X(NPNG2),W(NPNG2),S(NPNG2),SS(NPNG2),
-     *        AN(NPN1),R(NPNG2),DR(NPNG2),PPI,PIR,PII,P,EPS,A,
+      INCLUDE 'ampld.par.f'
+      REAL*8  LAM,MRR,MRI,X(NPNG2),W(NPNG2),S(NPNG2),SS(NPNG2),
+     *        AN(NPN1),R(NPNG2),DR(NPNG2),
      *        DDR(NPNG2),DRR(NPNG2),DRI(NPNG2),ANN(NPN1,NPN1)
       REAL*8 TR1(NPN2,NPN2),TI1(NPN2,NPN2)
       REAL*8 XALPHA(300),XBETA(300),WALPHA(300),WBETA(300)
@@ -292,27 +210,30 @@ C   changed from      INCLUDE 'amplq.par.f'
      &     IT11(NPN6,NPN4,NPN4),IT12(NPN6,NPN4,NPN4),
      &     IT21(NPN6,NPN4,NPN4),IT22(NPN6,NPN4,NPN4)
       COMPLEX*16 S11,S12,S21,S22
- 
+      
       COMMON /CT/ TR1,TI1
       COMMON /TMAT/ RT11,RT12,RT21,RT22,IT11,IT12,IT21,IT22
       COMMON /CHOICE/ ICHOICE
- 
-C  OPEN FILES *******************************************************
- 
-      OPEN (6,FILE='log')
- 
+  
 C  INPUT DATA ********************************************************
  
-      AXI=.5D0
+      !AXI=0.5 D0
       RAT=1 
-      LAM=0.4962D0
-      MRR=1.12D0
-      MRI=0.0D0 
-      EPS=1.0001D0 
-      NP=-1
+      !LAM=0.496 D0
+      !MRR=1.2 D0
+      !MRI=0.0001 D0 
+      !EPS=1.00000 D0 
+      !NP=-1
       DDELT=0.001D0 
-      NDGS=5
+      NDGS=2
 
+      !ALPHA=0D0
+      !BETA=0D0
+      THET0=0D0
+      THET=0D0
+      PHI0=0D0
+      PHI=0D0
+            
       ! Open input file
       OPEN(UNIT=15,FILE='tmatrix_tmp.inp',ACTION='READ')
       
@@ -331,19 +252,16 @@ C  INPUT DATA ********************************************************
       READ(15,*) nScat
       
       !print*,nScat
-
-      P=ACOS(-1Q0)
-      PIN=P
+      
+      P=DACOS(-1D0)
       NCHECK=0
       IF (NP.EQ.-1.OR.NP.EQ.-2) NCHECK=1
       IF (NP.GT.0.AND.(-1)**NP.EQ.1) NCHECK=1
-      WRITE (6,5454) NCHECK
+      !WRITE (6,5454) NCHECK
  5454 FORMAT ('NCHECK=',I1)
-      DLAM=LAM
-      DEPS=EPS
-      IF (DABS(RAT-1D0).GT.1D-8.AND.NP.EQ.-1) CALL SAREA (DEPS,RAT)
-      IF (DABS(RAT-1D0).GT.1D-8.AND.NP.GE.0) CALL SURFCH(NP,DEPS,RAT)
-      IF (DABS(RAT-1D0).GT.1D-8.AND.NP.EQ.-2) CALL SAREAC (DEPS,RAT)
+      IF (DABS(RAT-1D0).GT.1D-8.AND.NP.EQ.-1) CALL SAREA (EPS,RAT)
+      IF (DABS(RAT-1D0).GT.1D-8.AND.NP.GE.0) CALL SURFCH(NP,EPS,RAT)
+      IF (DABS(RAT-1D0).GT.1D-8.AND.NP.EQ.-2) CALL SAREAC (EPS,RAT)
       IF (NP.EQ.-3) CALL DROP (RAT)
 C     PRINT 8000, RAT
  8000 FORMAT ('RAT=',F8.6)
@@ -370,7 +288,7 @@ C     PRINT 8000, RAT
  8003 FORMAT('EQUAL-VOLUME-SPHERE RADIUS=',F8.4)
  8004 FORMAT('EQUAL-SURFACE-AREA-SPHERE RADIUS=',F8.4)
       A=RAT*AXI
-      XEV=2D0*PIN*A/DLAM
+      XEV=2D0*P*A/LAM
       IXXX=XEV+4.05D0*XEV**0.333333D0
       INM1=MAX0(4,IXXX)
       IF (INM1.GE.NPN1) PRINT 7333, NPN1
@@ -410,7 +328,7 @@ C     PRINT 8000, RAT
          DEXT=DABS((QEXT1-QEXT)/QEXT)
          QEXT1=QEXT
          QSCA1=QSCA
-C        PRINT 7334, NMAX,DSCA,DEXT
+c        PRINT 7334, NMAX,DSCA,DEXT
          IF(DSCA.LE.DDELT.AND.DEXT.LE.DDELT) GO TO 55
          IF (NMA.EQ.NPN1) PRINT 7333, NPN1
          IF (NMA.EQ.NPN1) STOP      
@@ -527,79 +445,44 @@ c        PRINT 7800,M,DABS(QXT),QSC,NMAX
       IF (WALB.GT.1D0+DDELT) PRINT 9111
  9111 FORMAT ('WARNING: W IS GREATER THAN 1')
 
-C  COMPUTATION OF THE AMPLITUDE AND PHASE MATRICES
+C  COMPUTATION OF THE AMPLITUDE [AND PHASE MATRICES ---- removed]
+
+C  AMPLITUDE MATRIX [Eqs. (2)-(4) of Ref. 6]
+   
       ! Open output file
       OPEN(UNIT=16,FILE='tmatrix_tmp.out',ACTION='WRITE')
-      print*,nScat
-      DO j=1,nScat
+      
+      DO i=1,nScat
         
         ! Read scattering angles
         READ(15,*) THET, PHI
       
-        CALL AMPL (NMAX,DLAM,THET0,THET,PHI0,PHI,ALPHA,BETA,
+        CALL AMPL (NMAX,LAM,THET0,THET,PHI0,PHI,ALPHA,BETA,
      &             S11,S12,S21,S22)
+        
         ! Write scattering matrix
         WRITE(16,'(8(E12.5,X))') REAL(S11), AIMAG(S11),
      &                          REAL(S12), AIMAG(S12),
      &                          REAL(S21), AIMAG(S21),
      &                          REAL(S22), AIMAG(S22)     
       ENDDO
-     
+      
       ! Close input
       CLOSE(15)
-
+      
       ! close output
       CLOSE(16)
-  
-C  AMPLITUDE MATRIX [Eqs. (2)-(4) of Ref. 6]
-     
-C  PHASE MATRIX [Eqs. (13)-(29) of Ref. 6]
-      Z11=0.5D0*(S11*DCONJG(S11)+S12*DCONJG(S12)
-     &          +S21*DCONJG(S21)+S22*DCONJG(S22))
-      Z12=0.5D0*(S11*DCONJG(S11)-S12*DCONJG(S12)
-     &          +S21*DCONJG(S21)-S22*DCONJG(S22))
-      Z13=-S11*DCONJG(S12)-S22*DCONJG(S21)
-      Z14=(0D0,1D0)*(S11*DCONJG(S12)-S22*DCONJG(S21))
-      Z21=0.5D0*(S11*DCONJG(S11)+S12*DCONJG(S12)
-     &          -S21*DCONJG(S21)-S22*DCONJG(S22))
-      Z22=0.5D0*(S11*DCONJG(S11)-S12*DCONJG(S12)
-     &          -S21*DCONJG(S21)+S22*DCONJG(S22))
-      Z23=-S11*DCONJG(S12)+S22*DCONJG(S21)
-      Z24=(0D0,1D0)*(S11*DCONJG(S12)+S22*DCONJG(S21))
-      Z31=-S11*DCONJG(S21)-S22*DCONJG(S12)
-      Z32=-S11*DCONJG(S21)+S22*DCONJG(S12)
-      Z33=S11*DCONJG(S22)+S12*DCONJG(S21)
-      Z34=(0D0,-1D0)*(S11*DCONJG(S22)+S21*DCONJG(S12))
-      Z41=(0D0,1D0)*(S21*DCONJG(S11)+S22*DCONJG(S12))
-      Z42=(0D0,1D0)*(S21*DCONJG(S11)-S22*DCONJG(S12))
-      Z43=(0D0,-1D0)*(S22*DCONJG(S11)-S12*DCONJG(S21))
-      Z44=S22*DCONJG(S11)-S12*DCONJG(S21)
-      WRITE (6,5000) 
-      WRITE (6,5001) Z11,Z12,Z13,Z14
-      WRITE (6,5001) Z21,Z22,Z23,Z24
-      WRITE (6,5001) Z31,Z32,Z33,Z34
-      WRITE (6,5001) Z41,Z42,Z43,Z44
-
- 5000 FORMAT ('PHASE MATRIX')
- 5001 FORMAT (4F10.4)
-
-      ITIME=MCLOCK()
-      TIME=DFLOAT(ITIME)/6000D0
-      PRINT 1001,TIME
- 1001 FORMAT (' time =',F8.2,' min')
+      
       STOP
       END
  
 C********************************************************************
-                                             
-C   CALCULATION OF THE AMPLITUDE MATRIX          
+                                           
+C   CALCULATION OF THE AMPLITUDE MATRIX       
  
       SUBROUTINE AMPL (NMAX,DLAM,TL,TL1,PL,PL1,ALPHA,BETA,
      &                 VV,VH,HV,HH)  
-      PARAMETER (NPN1=200, NPNG1=600, NPNG2=2*NPNG1, NPN2=2*NPN1,  
-     &           NPL=NPN2+1, NPN3=NPN1+1,  
-     &           NPN4=NPN1, NPN5=2*NPN4, NPN6=NPN4+1)
-C   changed from      INCLUDE 'amplq.par.f'
+      INCLUDE 'ampld.par.f'
       IMPLICIT REAL*8 (A-B,D-H,O-Z), COMPLEX*16 (C)
       REAL*8 AL(3,2),AL1(3,2),AP(2,3),AP1(2,3),B(3,3),
      *       R(2,2),R1(2,2),C(3,2),CA,CB,CT,CP,CTP,CPP,CT1,CP1,
@@ -612,14 +495,14 @@ C   changed from      INCLUDE 'amplq.par.f'
      &     TI21(NPN6,NPN4,NPN4),TI22(NPN6,NPN4,NPN4)
       COMPLEX*16 CAL(NPN4,NPN4),VV,VH,HV,HH
       COMMON /TMAT/ TR11,TR12,TR21,TR22,TI11,TI12,TI21,TI22
-      
+
       IF (ALPHA.LT.0D0.OR.ALPHA.GT.360D0.OR.
      &    BETA.LT.0D0.OR.BETA.GT.180D0.OR.
      &    TL.LT.0D0.OR.TL.GT.180D0.OR.
      &    TL1.LT.0D0.OR.TL1.GT.180D0.OR.
      &    PL.LT.0D0.OR.PL.GT.360D0.OR.
      &    PL1.LT.0D0.OR.PL1.GT.360D0) THEN 
-          WRITE (6,2000)
+          !WRITE (6,2000)
           STOP
       ELSE
           CONTINUE
@@ -636,7 +519,7 @@ C   changed from      INCLUDE 'amplq.par.f'
       THETL1=TL1*PI
       PHIL1=PL1*PI
 
-      EPS=1D-8
+      EPS=1D-7
       IF (THETL.LT.PIN2) THETL=THETL+EPS
       IF (THETL.GT.PIN2) THETL=THETL-EPS
       IF (THETL1.LT.PIN2) THETL1=THETL1+EPS
@@ -859,19 +742,19 @@ C____________COMPUTE MATRICES R AND R^(-1), EQ. (13)
       HV=R1(2,1)*CVV+R1(2,2)*CHV
       HH=R1(2,1)*CVH+R1(2,2)*CHH
       
-C      WRITE (6,1005) TL,TL1,PL,PL1,ALPHA,BETA 
-C      WRITE (6,1006)
-C      PRINT 1101, VV
-C      PRINT 1102, VH
-C      PRINT 1103, HV
-C      PRINT 1104, HH
-C 1101 FORMAT ('S11=',D11.5,' + i*',D11.5)
-C 1102 FORMAT ('S12=',D11.5,' + i*',D11.5)
-C 1103 FORMAT ('S21=',D11.5,' + i*',D11.5)
-C 1104 FORMAT ('S22=',D11.5,' + i*',D11.5)
-C 1005 FORMAT ('thet0=',F6.2,'  thet=',F6.2,'  phi0=',F6.2,
-C     &        '  phi=',F6.2,'  alpha=',F6.2,'  beta=',F6.2)
-C 1006 FORMAT ('AMPLITUDE MATRIX')
+c      WRITE (6,1005) TL,TL1,PL,PL1,ALPHA,BETA 
+c      WRITE (6,1006)
+c      PRINT 1101, VV
+c      PRINT 1102, VH
+c      PRINT 1103, HV
+c      PRINT 1104, HH
+c 1101 FORMAT ('S11=',D11.5,' + i*',D11.5)
+c 1102 FORMAT ('S12=',D11.5,' + i*',D11.5)
+c 1103 FORMAT ('S21=',D11.5,' + i*',D11.5)
+c 1104 FORMAT ('S22=',D11.5,' + i*',D11.5)
+c 1005 FORMAT ('thet0=',F6.2,'  thet=',F6.2,'  phi0=',F6.2,
+c     &        '  phi=',F6.2,'  alpha=',F6.2,'  beta=',F6.2)
+c 1006 FORMAT ('AMPLITUDE MATRIX')
       RETURN
       END
       
@@ -885,10 +768,7 @@ C     1.LE.N.LE.NMAX
 C     0.LE.X.LE.1
 
       SUBROUTINE VIGAMPL (X, NMAX, M, DV1, DV2)
-      PARAMETER (NPN1=200, NPNG1=600, NPNG2=2*NPNG1, NPN2=2*NPN1,  
-     &           NPL=NPN2+1, NPN3=NPN1+1,  
-     &           NPN4=NPN1, NPN5=2*NPN4, NPN6=NPN4+1)
-C   changed from      INCLUDE 'amplq.par.f'
+      INCLUDE 'ampld.par.f'
       IMPLICIT REAL*8 (A-H,O-Z)
       REAL*8 DV1(NPN6), DV2(NPN6)
       DO 1 N=1,NMAX
@@ -950,62 +830,41 @@ C   changed from      INCLUDE 'amplq.par.f'
       END 
 
 C**********************************************************************
-C                                                                     *
-C   INPUT PARAMETERS:                                                 *
-C                                                                     *
-C   NG = 2*NGAUSS - number of quadrature points on the                *
-C                   interval  (-1,1). NGAUSS.LE.NPNG1                 *
-C   NMAX,MMAX - maximum dimensions of the arrays.  NMAX.LE.NPN1       *
-C               MMAX.LE.NPN1                                          *
-C   P - pi                                                            *
-C                                                                     *
-C   OUTPUT PARAMETERS:                                                *
-C                                                                     *
-C   X,W - points and weights of the quadrature formula                *
-C   AN(N) = n*(n+1)                                                   *
-C   ANN(N1,N2) = (1/2)*sqrt((2*n1+1)*(2*n2+1)/(n1*(n1+1)*n2*(n2+1)))  *
-C   S(I)=1/sin(arccos(x(i)))                                          *
-C   SS(I)=S(I)**2                                                     *
-C                                                                     *
-C**********************************************************************
- 
+
       SUBROUTINE CONST (NGAUSS,NMAX,MMAX,P,X,W,AN,ANN,S,SS,NP,EPS)
-      IMPLICIT REAL*16 (A-H,O-Z)
-      PARAMETER (NPN1=200, NPNG1=600, NPNG2=2*NPNG1, NPN2=2*NPN1,  
-     &           NPL=NPN2+1, NPN3=NPN1+1,  
-     &           NPN4=NPN1, NPN5=2*NPN4, NPN6=NPN4+1)
-C   changed from      INCLUDE 'amplq.par.f'
-      REAL*16 X(NPNG2),W(NPNG2),X1(NPNG1),W1(NPNG1),
+      IMPLICIT REAL*8 (A-H,O-Z)
+      INCLUDE 'ampld.par.f'
+      REAL*8 X(NPNG2),W(NPNG2),X1(NPNG1),W1(NPNG1),
      *        X2(NPNG1),W2(NPNG1),
      *        S(NPNG2),SS(NPNG2),
      *        AN(NPN1),ANN(NPN1,NPN1),DD(NPN1)
  
       DO 10 N=1,NMAX
            NN=N*(N+1)
-           AN(N)=FLOAT(NN)
-           D=SQRT(FLOAT(2*N+1)/FLOAT(NN))
+           AN(N)=DFLOAT(NN)
+           D=DSQRT(DFLOAT(2*N+1)/DFLOAT(NN))
            DD(N)=D
            DO 10 N1=1,N
-                DDD=D*DD(N1)*0.5Q0
+                DDD=D*DD(N1)*0.5D0
                 ANN(N,N1)=DDD
                 ANN(N1,N)=DDD
    10 CONTINUE
       NG=2*NGAUSS
       IF (NP.EQ.-2) GO  TO 11
-      CALL QGAUSS(NG,0,0,X,W)
+      CALL GAUSS(NG,0,0,X,W)
       GO TO 19
    11 NG1=DFLOAT(NGAUSS)/2D0
       NG2=NGAUSS-NG1
-      XX=-COS(ATAN(EPS))
-      CALL QGAUSS(NG1,0,0,X1,W1)
-      CALL QGAUSS(NG2,0,0,X2,W2)
+      XX=-DCOS(DATAN(EPS))
+      CALL GAUSS(NG1,0,0,X1,W1)
+      CALL GAUSS(NG2,0,0,X2,W2)
       DO 12 I=1,NG1
-         W(I)=0.5Q0*(XX+1Q0)*W1(I)
-         X(I)=0.5Q0*(XX+1Q0)*X1(I)+0.5Q0*(XX-1Q0)
+         W(I)=0.5D0*(XX+1D0)*W1(I)
+         X(I)=0.5D0*(XX+1D0)*X1(I)+0.5D0*(XX-1D0)
    12 CONTINUE
       DO 14 I=1,NG2
-         W(I+NG1)=-0.5Q0*XX*W2(I)
-         X(I+NG1)=-0.5Q0*XX*X2(I)+0.5Q0*XX
+         W(I+NG1)=-0.5D0*XX*W2(I)
+         X(I+NG1)=-0.5D0*XX*X2(I)+0.5D0*XX
    14 CONTINUE
       DO 16 I=1,NGAUSS
          W(NG-I+1)=W(I)
@@ -1013,115 +872,23 @@ C   changed from      INCLUDE 'amplq.par.f'
    16 CONTINUE
    19 DO 20 I=1,NGAUSS
            Y=X(I)
-           Y=1Q0/(1Q0-Y*Y)
+           Y=1D0/(1D0-Y*Y)
            SS(I)=Y
            SS(NG-I+1)=Y
-           Y=SQRT(Y)
+           Y=DSQRT(Y)
            S(I)=Y
            S(NG-I+1)=Y
    20 CONTINUE
       RETURN
       END
  
-C***************************************************************
- 
-      SUBROUTINE QGAUSS ( N,IND1,IND2,Z,W )
-      IMPLICIT REAL*16 (A-H,P-Z)
-      REAL*16 Z(N),W(N)
-      A=1Q0
-      B=2Q0
-      C=3Q0
-      IND=MOD(N,2)
-      K=N/2+IND
-      F=FLOAT(N)
-      DO 100 I=1,K
-          M=N+1-I
-          IF(I.EQ.1) X=A-B/((F+A)*F)
-          IF(I.EQ.2) X=(Z(N)-A)*4Q0+Z(N)
-          IF(I.EQ.3) X=(Z(N-1)-Z(N))*1.6Q0+Z(N-1)
-          IF(I.GT.3) X=(Z(M+1)-Z(M+2))*C+Z(M+3)
-          IF(I.EQ.K.AND.IND.EQ.1) X=0Q0
-          NITER=0
-          CHECK=1Q-32
-   10     PB=1Q0
-          NITER=NITER+1
-          IF (NITER.LE.100) GO TO 15
-c         PRINT 5000, CHECK
-          CHECK=CHECK*10Q0
-   15     PC=X
-          DJ=A
-          DO 20 J=2,N
-              DJ=DJ+A
-              PA=PB
-              PB=PC
-   20         PC=X*PB+(X*PB-PA)*(DJ-A)/DJ
-          PA=A/((PB-X*PC)*F)
-          PB=PA*PC*(A-X*X)
-          X=X-PB
-          IF(ABS(PB).GT.CHECK*ABS(X)) GO TO 10
-          Z(M)=X
-          W(M)=PA*PA*(A-X*X)
-          IF(IND1.EQ.0) W(M)=B*W(M)
-          IF(I.EQ.K.AND.IND.EQ.1) GO TO 100
-          Z(I)=-Z(M)
-          W(I)=W(M)
-  100 CONTINUE
-C 5000 FORMAT ('QGAUSS DOES NOT CONVERGE, CHECK=',Q10.3)
-      IF(IND2.NE.1) GO TO 110
-      PRINT 1100,N
- 1100 FORMAT(' ***  POINTS AND WEIGHTS OF GAUSSIAN QUADRATURE FORMULA',
-     * ' OF ',I4,'-TH ORDER')
-      DO 105 I=1,K
-          ZZ=-Z(I)
-  105     PRINT 1200,I,ZZ,I,W(I)
- 1200 FORMAT(' ',4X,'X(',I4,') = ',F17.14,5X,'W(',I4,') = ',F17.14)
-      GO TO 115
-  110 CONTINUE
-C     PRINT 1300,N
- 1300 FORMAT(' GAUSSIAN QUADRATURE FORMULA OF ',I4,'-TH ORDER IS USED')
-  115 CONTINUE
-      IF(IND1.EQ.0) GO TO 140
-      DO 120 I=1,N
-  120     Z(I)=(A+Z(I))/B
-  140 CONTINUE
-      RETURN
-      END
- 
-C**********************************************************************
-C                                                                     *
-C   INPUT PARAMETERS:                                                 *
-C                                                                     *
-C   LAM - wavelength of light                                         *
-C   MRR and MRI - real and imaginary parts of the refractive index    *
-C   A,EPS,NP - specify shape of the particle                          *
-C              (see subroutines RSP1, RSP2, and RSP3)                 *
-C   NG = NGAUSS*2 - number of gaussian quadrature points on the       *
-C                   interval  (-1,1)                                  *
-C   X - gaussian division points                                      *
-C   P - pi                                                            *
-C                                                                     *
-C   OUTPUT INFORMATION:                                               *
-C                                                                     *
-C   PPI = PI**2 , where PI = (2*P)/LAM (wavenumber)                   *
-C   PIR = PPI*MRR                                                     *
-C   PII = PPI*MRI                                                     *
-C   R and DR - see subroutines RSP1, RSP2, and RSP3                   *
-C   DDR=1/(PI*SQRT(R))                                                *
-C   DRR+I*DRI=DDR/(MRR+I*MRI)                                         *
-C   NMAX - dimension of T(m)-matrices                                 *
-C   arrays  J,Y,JR,JI,DJ,DY,DJR,DJI are transferred through           *
-C         COMMON /CBESS/ - see subroutine BESS                        *
-C                                                                     *
 C**********************************************************************
  
       SUBROUTINE VARY (LAM,MRR,MRI,A,EPS,NP,NGAUSS,X,P,PPI,PIR,PII,
      *                 R,DR,DDR,DRR,DRI,NMAX)
-      PARAMETER (NPN1=200, NPNG1=600, NPNG2=2*NPNG1, NPN2=2*NPN1,  
-     &           NPL=NPN2+1, NPN3=NPN1+1,  
-     &           NPN4=NPN1, NPN5=2*NPN4, NPN6=NPN4+1)
-C   changed from      INCLUDE 'amplq.par.f'
-      IMPLICIT REAL*16 (A-H,O-Z)
-      REAL*16 X(NPNG2),R(NPNG2),DR(NPNG2),MRR,MRI,LAM,
+      INCLUDE 'ampld.par.f'
+      IMPLICIT REAL*8 (A-H,O-Z)
+      REAL*8  X(NPNG2),R(NPNG2),DR(NPNG2),MRR,MRI,LAM,
      *        Z(NPNG2),ZR(NPNG2),ZI(NPNG2),
      *        J(NPNG2,NPN1),Y(NPNG2,NPN1),JR(NPNG2,NPN1),
      *        JI(NPNG2,NPN1),DJ(NPNG2,NPN1),
@@ -1130,23 +897,23 @@ C   changed from      INCLUDE 'amplq.par.f'
      *        DY(NPNG2,NPN1)
       COMMON /CBESS/ J,Y,JR,JI,DJ,DY,DJR,DJI
       NG=NGAUSS*2
+      IF (NP.GT.0) CALL RSP2(X,NG,A,EPS,NP,R,DR)
       IF (NP.EQ.-1) CALL RSP1(X,NG,NGAUSS,A,EPS,NP,R,DR)
-      IF (NP.GE.0) CALL RSP2(X,NG,A,EPS,NP,R,DR)
       IF (NP.EQ.-2) CALL RSP3(X,NG,NGAUSS,A,EPS,R,DR)
       IF (NP.EQ.-3) CALL RSP4(X,NG,A,R,DR)
-      PI=P*2Q0/LAM
+      PI=P*2D0/LAM
       PPI=PI*PI
       PIR=PPI*MRR
       PII=PPI*MRI
-      V=1Q0/(MRR*MRR+MRI*MRI)
+      V=1D0/(MRR*MRR+MRI*MRI)
       PRR=MRR*V
       PRI=-MRI*V
-      TA=0Q0
+      TA=0D0
       DO 10 I=1,NG
-           VV=SQRT(R(I))
+           VV=DSQRT(R(I))
            V=VV*PI
            TA=MAX(TA,V)
-           VV=1Q0/V
+           VV=1D0/V
            DDR(I)=VV
            DRR(I)=PRR*VV
            DRI(I)=PRI*VV
@@ -1159,40 +926,30 @@ C   changed from      INCLUDE 'amplq.par.f'
       IF (NMAX.GT.NPN1) PRINT 9000,NMAX,NPN1
       IF (NMAX.GT.NPN1) STOP
  9000 FORMAT(' NMAX = ',I2,', i.e., greater than ',I3)
-      TB=TA*SQRT(MRR*MRR+MRI*MRI)
-      TB=MAX(TB,FLOAT(NMAX))
-      NNMAX1=8.0Q0*SQRT(MAX(TA,FLOAT(NMAX)))+3Q0
-      NNMAX2=(TB+4Q0*(TB**0.33333Q0)+8.0Q0*SQRT(TB))
+      TB=TA*DSQRT(MRR*MRR+MRI*MRI)
+      TB=DMAX1(TB,DFLOAT(NMAX))
+      NNMAX1=1.2D0*DSQRT(DMAX1(TA,DFLOAT(NMAX)))+3D0
+      NNMAX2=(TB+4D0*(TB**0.33333D0)+1.2D0*DSQRT(TB))
       NNMAX2=NNMAX2-NMAX+5
       CALL BESS(Z,ZR,ZI,NG,NMAX,NNMAX1,NNMAX2)
       RETURN
       END
  
 C**********************************************************************
-C                                                                     *
-C   Calculation of the functions R(I)=r(y)**2 and                     *
-C   DR(I)=[(d/dy)r(y)]/r(y) and horizontal semi-axis A                *
-C   for a spheroid specified by the parameters REV (equal-volume-     *
-C   sphere radius) and EPS=A/B (ratio of the semi-axes).              *
-C   y(I)=arccos(X(I))                                                 *
-C   1.LE.I.LE.NG                                                      *
-C   X - arguments                                                     *
-C                                                                     *
-C**********************************************************************
  
       SUBROUTINE RSP1 (X,NG,NGAUSS,REV,EPS,NP,R,DR)
-      IMPLICIT REAL*16 (A-H,O-Z)
-      REAL*16 X(NG),R(NG),DR(NG)
-      A=REV*EPS**(1Q0/3Q0)
+      IMPLICIT REAL*8 (A-H,O-Z)
+      REAL*8 X(NG),R(NG),DR(NG)
+      A=REV*EPS**(1D0/3D0)
       AA=A*A
       EE=EPS*EPS
-      EE1=EE-1Q0
+      EE1=EE-1D0
       DO 50 I=1,NGAUSS
           C=X(I)
           CC=C*C
-          SS=1Q0-CC
-          S=SQRT(SS)
-          RR=1Q0/(SS+EE*CC)
+          SS=1D0-CC
+          S=DSQRT(SS)
+          RR=1D0/(SS+EE*CC)
           R(I)=AA*RR
           R(NG-I+1)=R(I)
           DR(I)=RR*C*S*EE1
@@ -1202,59 +959,40 @@ C**********************************************************************
       END
  
 C**********************************************************************
-C                                                                     *
-C   Calculation of the functions R(I)=r(y)**2 and                     *
-C   DR(I)=[(d/dy)r(y)]/r(y) and parameter R0 for a Chebyshev          *
-C   particle specified by the parameters REV (equal-volume-sphere     *
-C   radius), EPS, and N.                                              *
-C   y(I)=arccos(X(I))                                                 *
-C   1.LE.I.LE.NG                                                      *
-C   X - arguments                                                     *
-C                                                                     *
-C**********************************************************************
  
       SUBROUTINE RSP2 (X,NG,REV,EPS,N,R,DR)
-      IMPLICIT REAL*16 (A-H,O-Z)
-      REAL*16 X(NG),R(NG),DR(NG)
-      DNP=FLOAT(N)
+      IMPLICIT REAL*8 (A-H,O-Z)
+      REAL*8 X(NG),R(NG),DR(NG)
+      DNP=DFLOAT(N)
       DN=DNP*DNP
-      DN4=DN*4Q0
+      DN4=DN*4D0
       EP=EPS*EPS
-      A=1Q0+1.5Q0*EP*(DN4-2Q0)/(DN4-1Q0)
-      I=(DNP+0.1Q0)*0.5Q0
+      A=1D0+1.5D0*EP*(DN4-2D0)/(DN4-1D0)
+      I=(DNP+0.1D0)*0.5D0
       I=2*I
-      IF (I.EQ.N) A=A-3Q0*EPS*(1Q0+0.25Q0*EP)/
-     *              (DN-1Q0)-0.25Q0*EP*EPS/(9Q0*DN-1Q0)
-      R0=REV*A**(-1Q0/3Q0)
+      IF (I.EQ.N) A=A-3D0*EPS*(1D0+0.25D0*EP)/
+     *              (DN-1D0)-0.25D0*EP*EPS/(9D0*DN-1D0)
+      R0=REV*A**(-1D0/3D0)
       DO 50 I=1,NG
-         XI=ACOS(X(I))*DNP
-         RI=R0*(1Q0+EPS*COS(XI))
+         XI=DACOS(X(I))*DNP
+         RI=R0*(1D0+EPS*DCOS(XI))
          R(I)=RI*RI
-         DR(I)=-R0*EPS*DNP*SIN(XI)/RI
+         DR(I)=-R0*EPS*DNP*DSIN(XI)/RI
+c        WRITE (6,*) I,R(I),DR(I)
    50 CONTINUE
       RETURN
       END
  
 C**********************************************************************
-C                                                                     *
-C   Calculation of the functions R(I)=r(y)**2 and                     *
-C   DR(I)=[(d/dy)r(y)]/r(y)                                           *
-C   for a cylinder specified by the parameters REV (equal-volume-     *
-C   sphere radius) and EPS=A/H (ratio of radius to semi-length)       *
-C   y(I)=arccos(X(I))                                                 *
-C   1.LE.I.LE.NG                                                      *
-C   X - arguments                                                     *
-C                                                                     *
-C**********************************************************************
  
       SUBROUTINE RSP3 (X,NG,NGAUSS,REV,EPS,R,DR)
-      IMPLICIT REAL*16 (A-H,O-Z)
-      REAL*16 X(NG),R(NG),DR(NG)
-      H=REV*( (2Q0/(3Q0*EPS*EPS))**(1Q0/3Q0) )
+      IMPLICIT REAL*8 (A-H,O-Z)
+      REAL*8 X(NG),R(NG),DR(NG)
+      H=REV*( (2D0/(3D0*EPS*EPS))**(1D0/3D0) )
       A=H*EPS
       DO 50 I=1,NGAUSS
          CO=-X(I)
-         SI=SQRT(1Q0-CO*CO)
+         SI=DSQRT(1D0-CO*CO)
          IF (SI/CO.GT.A/H) GO TO 20
          RAD=H/CO
          RTHET=H*SI/(CO*CO)
@@ -1272,10 +1010,10 @@ C**********************************************************************
 C**********************************************************************
 C                                                                     *
 C   Calculation of the functions R(I)=r(y)**2 and                     *
-C   DR(I)=[(d/dy)r(y)]/r(y) for a distorted                           *
+C   DR(I)=((d/dy)r(y))/r(y) for a distorted                           *
 C   droplet specified by the parameters r_ev (equal-volume-sphere     *
 C   radius) and c_n (Chebyshev expansion coefficients)                *
-C   y(I)=arccos(X(I))                                                 *
+C   Y(I)=arccos(X(I))                                                 *
 C   1.LE.I.LE.NG                                                      *
 C   X - arguments                                                     *
 C                                                                     *
@@ -1283,58 +1021,34 @@ C**********************************************************************
 
       SUBROUTINE RSP4 (X,NG,REV,R,DR)
       PARAMETER (NC=10)
-      IMPLICIT REAL*16 (A-H,O-Z)
-      REAL*16 X(NG),R(NG),DR(NG),C(0:NC)
+      IMPLICIT REAL*8 (A-H,O-Z)
+      REAL*8 X(NG),R(NG),DR(NG),C(0:NC)
       COMMON /CDROP/ C,R0V
       R0=REV*R0V
       DO I=1,NG
-         XI=ACOS(X(I))
-         RI=1Q0+C(0)
-         DRI=0Q0
+         XI=DACOS(X(I))
+         RI=1D0+C(0)
+         DRI=0D0
          DO N=1,NC
             XIN=XI*N
-            RI=RI+C(N)*COS(XIN)
-            DRI=DRI-C(N)*N*SIN(XIN)
+            RI=RI+C(N)*DCOS(XIN)
+            DRI=DRI-C(N)*N*DSIN(XIN)
          ENDDO
          RI=RI*R0
          DRI=DRI*R0
          R(I)=RI*RI
          DR(I)=DRI/RI
-C        WRITE (6,*) I,R(I),DR(I)
+c        WRITE (6,*) I,R(I),DR(I)
       ENDDO
       RETURN
       END
 
-C**********************************************************************
-C                                                                     *
-C   Calculation of spherical Bessel functions of the first kind       *
-C   J(I,N) = j_n(x) and second kind Y(I,N) = y_n(x)                   *
-C   of real-valued argument X(I) and first kind JR(I,N)+I*JI(I,N) =   *
-C   = j_n(z) of complex argument Z(I)=XR(I)+I*XI(I), as well as       *
-C   the functions                                                     *
-C                                                                     *
-C   DJ(I,N) = (1/x)(d/dx)(x*j_n(x)) ,                                 *
-C   DY(I,N) = (1/x)(d/dx)(x*y_n(x)) ,                                 *
-C   DJR(I,N) = Re ((1/z)(d/dz)(z*j_n(x)) ,                            *
-C   DJI(I,N) = Im ((1/z)(d/dz)(z*j_n(x)) .                            *
-C                                                                     *
-C   1.LE.N.LE.NMAX                                                    *
-C   NMAX.LE.NPN1                                                      *
-C   X,XR,XI - arguments                                               *
-C   1.LE.I.LE.NG                                                      *
-C   Arrays  J,Y,JR,JI,DJ,DY,DJR,DJI are in                            *
-C         COMMON /CBESS/                                              *
-C   Parameters NNMAX1 and NMAX2 determine computational accuracy      *
-C                                                                     *
-C**********************************************************************
+C*********************************************************************
  
       SUBROUTINE BESS (X,XR,XI,NG,NMAX,NNMAX1,NNMAX2)
-      PARAMETER (NPN1=200, NPNG1=600, NPNG2=2*NPNG1, NPN2=2*NPN1,  
-     &           NPL=NPN2+1, NPN3=NPN1+1,  
-     &           NPN4=NPN1, NPN5=2*NPN4, NPN6=NPN4+1)
-C   changed from      INCLUDE 'amplq.par.f'
-      IMPLICIT REAL*16 (A-H,O-Z)
-      REAL*16 X(NG),XR(NG),XI(NG),
+      INCLUDE 'ampld.par.f'
+      IMPLICIT REAL*8 (A-H,O-Z)
+      REAL*8 X(NG),XR(NG),XI(NG),
      *        J(NPNG2,NPN1),Y(NPNG2,NPN1),JR(NPNG2,NPN1),
      *        JI(NPNG2,NPN1),DJ(NPNG2,NPN1),DY(NPNG2,NPN1),
      *        DJR(NPNG2,NPN1),DJI(NPNG2,NPN1),
@@ -1364,109 +1078,93 @@ C   changed from      INCLUDE 'amplq.par.f'
       END
  
 C**********************************************************************
-C                                                                     *
-C   Calculation of spherical Bessel functions of the first kind j     *
-C   of real-valued argument x of orders from 1 to NMAX by using       *
-C   backward recursion. Parametr NNMAX determines numerical accuracy. *
-C   U - function (1/x)(d/dx)(x*j(x))                                  *
-C                                                                     *
-C**********************************************************************
  
       SUBROUTINE RJB(X,Y,U,NMAX,NNMAX)
-      IMPLICIT REAL*16 (A-H,O-Z)
-      REAL*16 Y(NMAX),U(NMAX),Z(900)
+      IMPLICIT REAL*8 (A-H,O-Z)
+      REAL*8 Y(NMAX),U(NMAX),Z(800)
       L=NMAX+NNMAX
-      XX=1Q0/X
-      Z(L)=1Q0/(FLOAT(2*L+1)*XX)
+      XX=1D0/X
+      Z(L)=1D0/(DFLOAT(2*L+1)*XX)
       L1=L-1
       DO 5 I=1,L1
          I1=L-I
-         Z(I1)=1Q0/(FLOAT(2*I1+1)*XX-Z(I1+1))
+         Z(I1)=1D0/(DFLOAT(2*I1+1)*XX-Z(I1+1))
     5 CONTINUE
-      Z0=1Q0/(XX-Z(1))
-      Y0=Z0*COS(X)*XX
+      Z0=1D0/(XX-Z(1))
+      Y0=Z0*DCOS(X)*XX
       Y1=Y0*Z(1)
       U(1)=Y0-Y1*XX
       Y(1)=Y1
       DO 10 I=2,NMAX
          YI1=Y(I-1)
          YI=YI1*Z(I)
-         U(I)=YI1-FLOAT(I)*YI*XX
+         U(I)=YI1-DFLOAT(I)*YI*XX
          Y(I)=YI
    10 CONTINUE
       RETURN
       END
  
 C**********************************************************************
-C                                                                     *
-C   Calculation of spherical Bessel functions of the second kind y    *
-C   of real-valued argument x of orders from 1 to NMAX by using upward*
-C   recursion. V - function (1/x)(d/dx)(x*y(x))                       *
-C                                                                     *
-C**********************************************************************
  
       SUBROUTINE RYB(X,Y,V,NMAX)
-      IMPLICIT REAL*16 (A-H,O-Z)
-      REAL*16 Y(NMAX),V(NMAX)
-      C=COS(X)
-      S=SIN(X)
-      X1=1Q0/X
+      IMPLICIT REAL*8 (A-H,O-Z)
+      REAL*8 Y(NMAX),V(NMAX)
+      C=DCOS(X)
+      S=DSIN(X)
+      X1=1D0/X
       X2=X1*X1
       X3=X2*X1
       Y1=-C*X2-S*X1
       Y(1)=Y1
-      Y(2)=(-3Q0*X3+X1)*C-3Q0*X2*S
+      Y(2)=(-3D0*X3+X1)*C-3D0*X2*S
       NMAX1=NMAX-1
       DO 5 I=2,NMAX1
-    5     Y(I+1)=FLOAT(2*I+1)*X1*Y(I)-Y(I-1)
+    5     Y(I+1)=DFLOAT(2*I+1)*X1*Y(I)-Y(I-1)
       V(1)=-X1*(C+Y1)
       DO 10 I=2,NMAX
-  10       V(I)=Y(I-1)-FLOAT(I)*X1*Y(I)
+  10       V(I)=Y(I-1)-DFLOAT(I)*X1*Y(I)
       RETURN
       END
  
 C**********************************************************************
 C                                                                     *
-C   Calculation of spherical Bessel functions of the first kind       *
-C   j=JR+I*JI of complex argument x=XR+I*XI of orders from 1 to NMAX  *
-C   by using backward recursion. Parametr NNMAX determines numerical  *
-C   accuracy. U=UR+I*UI - function (1/x)(d/dx)(x*j(x))                *
+C   CALCULATION OF SPHERICAL BESSEL FUNCTIONS OF THE FIRST KIND       *
+C   J=JR+I*JI OF COMPLEX ARGUMENT X=XR+I*XI OF ORDERS FROM 1 TO NMAX  *
+C   BY USING BACKWARD RECURSION. PARAMETR NNMAX DETERMINES NUMERICAL  *
+C   ACCURACY. U=UR+I*UI - FUNCTION (1/X)(D/DX)(X*J(X))                *
 C                                                                     *
 C**********************************************************************
  
       SUBROUTINE CJB (XR,XI,YR,YI,UR,UI,NMAX,NNMAX)
-      PARAMETER (NPN1=200, NPNG1=600, NPNG2=2*NPNG1, NPN2=2*NPN1,  
-     &           NPL=NPN2+1, NPN3=NPN1+1,  
-     &           NPN4=NPN1, NPN5=2*NPN4, NPN6=NPN4+1)
-C   changed from      INCLUDE 'amplq.par.f'
-      IMPLICIT REAL*16 (A-H,O-Z)
-      REAL*16 YR(NMAX),YI(NMAX),UR(NMAX),UI(NMAX)
-      REAL*16 CYR(NPN1),CYI(NPN1),CZR(1200),CZI(1200),
-     *        CUR(NPN1),CUI(NPN1)
+      INCLUDE 'ampld.par.f'
+      IMPLICIT REAL*8 (A-H,O-Z)
+      REAL*8 YR(NMAX),YI(NMAX),UR(NMAX),UI(NMAX)
+      REAL*8 CYR(NPN1),CYI(NPN1),CZR(1200),CZI(1200),
+     *       CUR(NPN1),CUI(NPN1)
       L=NMAX+NNMAX
-      XRXI=1Q0/(XR*XR+XI*XI)
+      XRXI=1D0/(XR*XR+XI*XI)
       CXXR=XR*XRXI
       CXXI=-XI*XRXI 
-      QF=1Q0/FLOAT(2*L+1)
+      QF=1D0/DFLOAT(2*L+1)
       CZR(L)=XR*QF
       CZI(L)=XI*QF
       L1=L-1
-      DO 5 I=1,L1
+      DO I=1,L1
          I1=L-I
-         QF=FLOAT(2*I1+1)
+         QF=DFLOAT(2*I1+1)
          AR=QF*CXXR-CZR(I1+1)
          AI=QF*CXXI-CZI(I1+1)
-         ARI=1Q0/(AR*AR+AI*AI)
+         ARI=1D0/(AR*AR+AI*AI)
          CZR(I1)=AR*ARI
          CZI(I1)=-AI*ARI
-    5 CONTINUE
+      ENDDO   
       AR=CXXR-CZR(1)
       AI=CXXI-CZI(1)
-      ARI=1Q0/(AR*AR+AI*AI)
+      ARI=1D0/(AR*AR+AI*AI)
       CZ0R=AR*ARI
       CZ0I=-AI*ARI
-      CR=COS(XR)*COSH(XI)
-      CI=-SIN(XR)*SINH(XI)
+      CR=DCOS(XR)*DCOSH(XI)
+      CI=-DSIN(XR)*DSINH(XI)
       AR=CZ0R*CR-CZ0I*CI
       AI=CZ0I*CR+CZ0R*CI
       CY0R=AR*CXXR-AI*CXXI
@@ -1485,8 +1183,8 @@ C   changed from      INCLUDE 'amplq.par.f'
       YI(1)=CY1I
       UR(1)=CU1R
       UI(1)=CU1I
-      DO 10 I=2,NMAX
-         QI=FLOAT(I)
+      DO I=2,NMAX
+         QI=DFLOAT(I)
          CYI1R=CYR(I-1)
          CYI1I=CYI(I-1)
          CYIR=CYI1R*CZR(I)-CYI1I*CZI(I)
@@ -1503,29 +1201,17 @@ C   changed from      INCLUDE 'amplq.par.f'
          YI(I)=CYII
          UR(I)=CUIR
          UI(I)=CUII
-   10 CONTINUE
+      ENDDO   
       RETURN
       END
  
 C**********************************************************************
-C                                                                     *
-C   calculation of the T(0) matrix for an axially symmetric particle  *
-C                                                                     *
-C   Output information:                                               *
-C                                                                     *
-C   Arrays  TR1 and TI1 (real and imaginary parts of the              *
-C   T(0) matrix) are in COMMON /CT/                                   *
-C                                                                     *
-C**********************************************************************
  
       SUBROUTINE TMATR0 (NGAUSS,X,W,AN,ANN,S,SS,PPI,PIR,PII,R,DR,DDR,
      *                  DRR,DRI,NMAX,NCHECK)
-      PARAMETER (NPN1=200, NPNG1=600, NPNG2=2*NPNG1, NPN2=2*NPN1,  
-     &           NPL=NPN2+1, NPN3=NPN1+1,  
-     &           NPN4=NPN1, NPN5=2*NPN4, NPN6=NPN4+1)
-C   changed from      INCLUDE 'amplq.par.f'
-      IMPLICIT REAL*16 (A-H,O-Z)
-      REAL*16 X(NPNG2),W(NPNG2),AN(NPN1),S(NPNG2),SS(NPNG2),
+      INCLUDE 'ampld.par.f'
+      IMPLICIT REAL*8 (A-H,O-Z)
+      REAL*8  X(NPNG2),W(NPNG2),AN(NPN1),S(NPNG2),SS(NPNG2),
      *        R(NPNG2),DR(NPNG2),SIG(NPN2),
      *        J(NPNG2,NPN1),Y(NPNG2,NPN1),
      *        JR(NPNG2,NPN1),JI(NPNG2,NPN1),DJ(NPNG2,NPN1),
@@ -1535,7 +1221,7 @@ C   changed from      INCLUDE 'amplq.par.f'
      *        DRI(NPNG2),DS(NPNG2),DSS(NPNG2),RR(NPNG2),
      *        DV1(NPN1),DV2(NPN1)
  
-      REAL*16 R11(NPN1,NPN1),R12(NPN1,NPN1),
+      REAL*8  R11(NPN1,NPN1),R12(NPN1,NPN1),
      *        R21(NPN1,NPN1),R22(NPN1,NPN1),
      *        I11(NPN1,NPN1),I12(NPN1,NPN1),
      *        I21(NPN1,NPN1),I22(NPN1,NPN1),
@@ -1559,14 +1245,14 @@ C   changed from      INCLUDE 'amplq.par.f'
       NNMAX=NMAX+NMAX
       NG=2*NGAUSS
       NGSS=NG
-      FACTOR=1Q0
+      FACTOR=1D0
       IF (NCHECK.EQ.1) THEN
             NGSS=NGAUSS
-            FACTOR=2Q0
+            FACTOR=2D0
          ELSE
             CONTINUE
       ENDIF
-      SI=1Q0
+      SI=1D0
       DO 5 N=1,NNMAX
            SI=-SI
            SIG(N)=SI
@@ -1574,7 +1260,7 @@ C   changed from      INCLUDE 'amplq.par.f'
    20 DO 25 I=1,NGAUSS
          I1=NGAUSS+I
          I2=NGAUSS-I+1
-         CALL VIG (X(I1),NMAX,0,DV1,DV2)
+         CALL VIG ( X(I1), NMAX, 0, DV1, DV2)
          DO 25 N=1,NMAX
             SI=SIG(N)
             DD1=DV1(N)
@@ -1592,15 +1278,16 @@ C   changed from      INCLUDE 'amplq.par.f'
            AN1=AN(N1)
            DO 300 N2=MM1,NMAX
                 AN2=AN(N2)
-                AR12=0Q0
-                AR21=0Q0
-                AI12=0Q0
-                AI21=0Q0
-                GR12=0Q0
-                GR21=0Q0
-                GI12=0Q0
-                GI21=0Q0
-                IF (NCHECK.EQ.1.AND.SIG(N1+N2).LT.0Q0) GO TO 205
+                AR12=0D0
+                AR21=0D0
+                AI12=0D0
+                AI21=0D0
+                GR12=0D0
+                GR21=0D0
+                GI12=0D0
+                GI21=0D0
+                IF (NCHECK.EQ.1.AND.SIG(N1+N2).LT.0D0) GO TO 205
+
                 DO 200 I=1,NGSS
                     D1N1=D1(I,N1)
                     D2N1=D2(I,N1)
@@ -1665,7 +1352,7 @@ C   changed from      INCLUDE 'amplq.par.f'
                     GI21=GI21+F1*C4I+F2*C5I
   200           CONTINUE
  
-  205           AN12=ANN(N1,N2)*FACTOR 
+  205           AN12=ANN(N1,N2)*FACTOR
                 R12(N1,N2)=AR12*AN12
                 R21(N1,N2)=AR21*AN12
                 I12(N1,N2)=AI12*AN12
@@ -1703,15 +1390,15 @@ C   changed from      INCLUDE 'amplq.par.f'
                 TRGQR(K1,K2)=TPIR*TGR21-TPII*TGI21+TPPI*TGR12
                 TRGQI(K1,K2)=TPIR*TGI21+TPII*TGR21+TPPI*TGI12
  
-                TQR(K1,KK2)=0Q0
-                TQI(K1,KK2)=0Q0
-                TRGQR(K1,KK2)=0Q0
-                TRGQI(K1,KK2)=0Q0
+                TQR(K1,KK2)=0D0
+                TQI(K1,KK2)=0D0
+                TRGQR(K1,KK2)=0D0
+                TRGQI(K1,KK2)=0D0
  
-                TQR(KK1,K2)=0Q0
-                TQI(KK1,K2)=0Q0
-                TRGQR(KK1,K2)=0Q0
-                TRGQI(KK1,K2)=0Q0
+                TQR(KK1,K2)=0D0
+                TQI(KK1,K2)=0D0
+                TRGQR(KK1,K2)=0D0
+                TRGQI(KK1,K2)=0D0
  
                 TQR(KK1,KK2)=TPIR*TAR12-TPII*TAI12+TPPI*TAR21
                 TQI(KK1,KK2)=TPIR*TAI12+TPII*TAR12+TPPI*TAI21
@@ -1732,42 +1419,12 @@ C   changed from      INCLUDE 'amplq.par.f'
       END
  
 C**********************************************************************
-C                                                                     *
-C   Calculation of the T(M) matrix, M.GE.1, for an axially symmetric  *
-C   particle                                                          *
-C                                                                     *
-C   Input parameters:                                                 *
-C                                                                     *
-C   M.GE.1                                                            *
-C   NG = NGAUSS*2 - number of gaussian division points on the         *
-C        interval  (-1,1)                                             *
-C   W - quadrature weights                                            *
-C   AN,ANN - see subroutine   CONST                                   *
-C   S,SS - see subroutine   CONST                                     *
-C   ARRAYS  DV1,DV2,DV3,DV4 are in COMMON /DV/ -                      *
-C         see subroutine   DVIG                                       *
-C   PPI,PIR,PII - see subroutine   VARY                               *
-C   R J DR - see subroutines RSP1 and RSP2                            *
-C   DDR,DRR,DRI - see subroutine   VARY                               *
-C   NMAX - dimension of the T(M) matrix                               *
-C   Arrays  J,Y,JR,JI,DJ,DY,DJR,DJI are in                            *
-C        COMMON /CBESS/ - see subroutine   BESS                       *
-C                                                                     *
-C   Output parameters:                                                *
-C                                                                     *
-C   Arrays  TR1,TI1 (real and imaginary parts of the T(M) matrix)     *
-C   are in COMMON /CT/                                                *
-C                                                                     *
-C**********************************************************************
  
       SUBROUTINE TMATR (M,NGAUSS,X,W,AN,ANN,S,SS,PPI,PIR,PII,R,DR,DDR,
      *                  DRR,DRI,NMAX,NCHECK)
-      PARAMETER (NPN1=200, NPNG1=600, NPNG2=2*NPNG1, NPN2=2*NPN1,  
-     &           NPL=NPN2+1, NPN3=NPN1+1,  
-     &           NPN4=NPN1, NPN5=2*NPN4, NPN6=NPN4+1)
-C   changed from      INCLUDE 'amplq.par.f'
-      IMPLICIT REAL*16 (A-H,O-Z)
-      REAL*16 X(NPNG2),W(NPNG2),AN(NPN1),S(NPNG2),SS(NPNG2),
+      INCLUDE 'ampld.par.f'
+      IMPLICIT REAL*8 (A-H,O-Z)
+      REAL*8  X(NPNG2),W(NPNG2),AN(NPN1),S(NPNG2),SS(NPNG2),
      *        R(NPNG2),DR(NPNG2),SIG(NPN2),
      *        J(NPNG2,NPN1),Y(NPNG2,NPN1),
      *        JR(NPNG2,NPN1),JI(NPNG2,NPN1),DJ(NPNG2,NPN1),
@@ -1776,7 +1433,8 @@ C   changed from      INCLUDE 'amplq.par.f'
      *        D1(NPNG2,NPN1),D2(NPNG2,NPN1),
      *        DRI(NPNG2),DS(NPNG2),DSS(NPNG2),RR(NPNG2),
      *        DV1(NPN1),DV2(NPN1)
-      REAL*16 R11(NPN1,NPN1),R12(NPN1,NPN1),
+ 
+      REAL*8  R11(NPN1,NPN1),R12(NPN1,NPN1),
      *        R21(NPN1,NPN1),R22(NPN1,NPN1),
      *        I11(NPN1,NPN1),I12(NPN1,NPN1),
      *        I21(NPN1,NPN1),I22(NPN1,NPN1),
@@ -1797,18 +1455,18 @@ C   changed from      INCLUDE 'amplq.par.f'
       COMMON /CT/ TR1,TI1
       COMMON /CTT/ QR,QI,RGQR,RGQI
       MM1=M
-      QM=FLOAT(M)
+      QM=DFLOAT(M)
       QMM=QM*QM
       NG=2*NGAUSS
       NGSS=NG
-      FACTOR=1Q0
+      FACTOR=1D0
       IF (NCHECK.EQ.1) THEN
             NGSS=NGAUSS
-            FACTOR=2Q0
+            FACTOR=2D0
          ELSE
             CONTINUE
       ENDIF
-      SI=1Q0
+      SI=1D0
       NM=NMAX+NMAX
       DO 5 N=1,NM
            SI=-SI
@@ -1819,7 +1477,7 @@ C   changed from      INCLUDE 'amplq.par.f'
          I2=NGAUSS-I+1
          CALL VIG (X(I1),NMAX,M,DV1,DV2)
          DO 25 N=1,NMAX
-            SI=SIG(N+M)
+            SI=SIG(N)
             DD1=DV1(N)
             DD2=DV2(N)
             D1(I1,N)=DD1
@@ -1838,22 +1496,22 @@ C   changed from      INCLUDE 'amplq.par.f'
            AN1=AN(N1)
            DO 300 N2=MM1,NMAX
                 AN2=AN(N2)
-                AR11=0Q0
-                AR12=0Q0
-                AR21=0Q0
-                AR22=0Q0
-                AI11=0Q0
-                AI12=0Q0
-                AI21=0Q0
-                AI22=0Q0
-                GR11=0Q0
-                GR12=0Q0
-                GR21=0Q0
-                GR22=0Q0
-                GI11=0Q0
-                GI12=0Q0
-                GI21=0Q0
-                GI22=0Q0
+                AR11=0D0
+                AR12=0D0
+                AR21=0D0
+                AR22=0D0
+                AI11=0D0
+                AI12=0D0
+                AI21=0D0
+                AI22=0D0
+                GR11=0D0
+                GR12=0D0
+                GR21=0D0
+                GR22=0D0
+                GI11=0D0
+                GI12=0D0
+                GI21=0D0
+                GI22=0D0
                 SI=SIG(N1+N2)
  
                 DO 200 I=1,NGSS
@@ -1924,7 +1582,7 @@ C   changed from      INCLUDE 'amplq.par.f'
                     DSSI=DSS(I)
                     RRI=RR(I)
  
-                    IF (NCHECK.EQ.1.AND.SI.GT.0Q0) GO TO 150
+                    IF (NCHECK.EQ.1.AND.SI.GT.0D0) GO TO 150
  
                     E1=DSI*AA1
                     AR11=AR11+E1*B1R
@@ -2034,131 +1692,121 @@ C   changed from      INCLUDE 'amplq.par.f'
                 RGQR(N1,N2)=TRGQR(N1,N2)
                 RGQI(N1,N2)=TRGQI(N1,N2)
   320 CONTINUE
+ 
       CALL TT(NM,NCHECK)
+ 
       RETURN
       END
  
 C*****************************************************************
-c
-c     Calculation of the functions
-c     DV1(n)=dvig(0,m,n,arccos x)
-c     and
-c     DV2(n)=[d/d(arccos x)] dvig(0,m,n,arccos x)
-c     1.LE.N.LE.NMAX
-c     0.LE.x.LE.1
  
-      SUBROUTINE VIG (X,NMAX,M,DV1,DV2)
-      PARAMETER (NPN1=200, NPNG1=600, NPNG2=2*NPNG1, NPN2=2*NPN1,  
-     &           NPL=NPN2+1, NPN3=NPN1+1,  
-     &           NPN4=NPN1, NPN5=2*NPN4, NPN6=NPN4+1)
-C   changed from      INCLUDE 'amplq.par.f'
-      IMPLICIT REAL*16 (A-H,O-Z)
-      REAL*16 DV1(NPN1), DV2(NPN1)
-      A=1Q0
-      QS=SQRT(1Q0-X*X)
-      QS1=1Q0/QS
-      DO 1 N=1,NMAX
-         DV1(N)=0Q0
-         DV2(N)=0Q0
-    1 CONTINUE
+      SUBROUTINE VIG (X, NMAX, M, DV1, DV2)
+      INCLUDE 'ampld.par.f'
+      IMPLICIT REAL*8 (A-H,O-Z)
+      REAL*8 DV1(NPN1),DV2(NPN1)
+ 
+      A=1D0
+      QS=DSQRT(1D0-X*X)
+      QS1=1D0/QS
+      DO N=1,NMAX
+         DV1(N)=0D0
+         DV2(N)=0D0
+      ENDDO   
       IF (M.NE.0) GO TO 20
-      D1=1Q0
+      D1=1D0
       D2=X  
-      DO 5 N=1,NMAX  
-         QN=FLOAT(N)
-         QN1=FLOAT(N+1)
-         QN2=FLOAT(2*N+1)
+      DO N=1,NMAX  
+         QN=DFLOAT(N)
+         QN1=DFLOAT(N+1)
+         QN2=DFLOAT(2*N+1)
          D3=(QN2*X*D2-QN*D1)/QN1 
          DER=QS1*(QN1*QN/QN2)*(-D1+D3)
          DV1(N)=D2
          DV2(N)=DER
          D1=D2
          D2=D3
-    5 CONTINUE
+      ENDDO   
       RETURN
-   20 QMM=FLOAT(M*M)
-      DO 25 I=1,M
+   20 QMM=DFLOAT(M*M)
+      DO I=1,M
          I2=I*2
-         A=A*SQRT(FLOAT(I2-1)/FLOAT(I2))*QS
-   25 CONTINUE
-      D1=0Q0
+         A=A*DSQRT(DFLOAT(I2-1)/DFLOAT(I2))*QS
+      ENDDO   
+      D1=0D0
       D2=A 
-      DO 30 N=M,NMAX
-         QN=FLOAT(N)
-         QN2=FLOAT(2*N+1)
-         QN1=FLOAT(N+1)
-         QNM=SQRT(QN*QN-QMM)
-         QNM1=SQRT(QN1*QN1-QMM)
+      DO N=M,NMAX
+         QN=DFLOAT(N)
+         QN2=DFLOAT(2*N+1)
+         QN1=DFLOAT(N+1)
+         QNM=DSQRT(QN*QN-QMM)
+         QNM1=DSQRT(QN1*QN1-QMM)
          D3=(QN2*X*D2-QNM*D1)/QNM1
          DER=QS1*(-QN1*QNM*D1+QN*QNM1*D3)/QN2
          DV1(N)=D2
          DV2(N)=DER
          D1=D2
          D2=D3
-   30 CONTINUE
+      ENDDO   
       RETURN
       END 
  
 C**********************************************************************
 C                                                                     *
-C   Calculation of the matrix    T = - RG(Q) * (Q**(-1))              *
+C   CALCULATION OF THE MATRIX    T = - RG(Q) * (Q**(-1))              *
 C                                                                     *
-C   Input infortmation is in COMMON /CTT/                             *
-C   Output information is in COMMON /CT/                              *
+C   INPUT INFORTMATION IS IN COMMON /CTT/                             *
+C   OUTPUT INFORMATION IS IN COMMON /CT/                              *
 C                                                                     *
 C**********************************************************************
  
       SUBROUTINE TT(NMAX,NCHECK)
-      PARAMETER (NPN1=200, NPNG1=600, NPNG2=2*NPNG1, NPN2=2*NPN1,  
-     &           NPL=NPN2+1, NPN3=NPN1+1,  
-     &           NPN4=NPN1, NPN5=2*NPN4, NPN6=NPN4+1)
-C   changed from      INCLUDE 'amplq.par.f'
+      INCLUDE 'ampld.par.f'
       IMPLICIT REAL*8 (A-H,O-Z)
-      REAL*16 F(NPN2,NPN2),B(NPN2),WORK(NPN2),COND,
+      REAL*8 F(NPN2,NPN2),B(NPN2),WORK(NPN2),
      *       QR(NPN2,NPN2),QI(NPN2,NPN2),
      *       RGQR(NPN2,NPN2),RGQI(NPN2,NPN2),
      *       A(NPN2,NPN2),C(NPN2,NPN2),D(NPN2,NPN2),E(NPN2,NPN2)
       REAL*8 TR1(NPN2,NPN2),TI1(NPN2,NPN2)
-      COMPLEX*32 ZQ(NPN2,NPN2),ZW(NPN2)
+      COMPLEX*16 ZQ(NPN2,NPN2),ZW(NPN2)
       INTEGER IPIV(NPN2),IPVT(NPN2)
       COMMON /CT/ TR1,TI1
       COMMON /CTT/ QR,QI,RGQR,RGQI
       NDIM=NPN2
       NNMAX=2*NMAX
 
-C       Inversion from LAPACK
+C     Matrix inversion from LAPACK
 
-        DO I=1,NNMAX
+      DO I=1,NNMAX
            DO J=1,NNMAX
-              ZQ(I,J)=CMPLX(QR(I,J),QI(I,J))
+              ZQ(I,J)=DCMPLX(QR(I,J),QI(I,J))
            ENDDO
-        ENDDO
-        INFO=0
-        CALL ZGETRF(NNMAX,NNMAX,ZQ,NPN2,IPIV,INFO)
-        IF (INFO.NE.0) WRITE (6,1100) INFO
-        CALL ZGETRI(NNMAX,ZQ,NPN2,IPIV,ZW,NPN2,INFO)
-        IF (INFO.NE.0) WRITE (6,1100) INFO
+      ENDDO
+      INFO=0
+      CALL ZGETRF(NNMAX,NNMAX,ZQ,NPN2,IPIV,INFO)
+      IF (INFO.NE.0) WRITE (6,1100) INFO
+      CALL ZGETRI(NNMAX,ZQ,NPN2,IPIV,ZW,NPN2,INFO)
+      IF (INFO.NE.0) WRITE (6,1100) INFO
 
- 1100   FORMAT ('WARNING:  info=', I2)
-        DO I=1,NNMAX
-           DO J=1,NNMAX
-              TR=0D0
-              TI=0D0
-              DO K=1,NNMAX
+ 1100 FORMAT ('WARNING:  info=', i2)
+      DO I=1,NNMAX
+         DO J=1,NNMAX
+            TR=0D0
+            TI=0D0
+            DO K=1,NNMAX
                  ARR=RGQR(I,K)
                  ARI=RGQI(I,K)
                  AR=ZQ(K,J)
-                 AI=IMAG(ZQ(K,J))
+                 AI=DIMAG(ZQ(K,J))
                  TR=TR-ARR*AR+ARI*AI
                  TI=TI-ARR*AI-ARI*AR
-              ENDDO
-              TR1(I,J)=TR
-              TI1(I,J)=TI
-           ENDDO
-        ENDDO
+            ENDDO
+            TR1(I,J)=TR
+            TI1(I,J)=TI
+         ENDDO
+      ENDDO
       RETURN
       END
- 
+
 C*****************************************************************
  
       SUBROUTINE SAREA (D,RAT)
@@ -2174,7 +1822,7 @@ C*****************************************************************
      &   /E)
       R=DSQRT(R)
       RAT=1D0/R
-      RETURN
+      return
       END
  
 c****************************************************************
@@ -2217,25 +1865,24 @@ C********************************************************************
       RETURN
       END
 
-C********************************************************************
+C**********************************************************************
 
       SUBROUTINE DROP (RAT)
       PARAMETER (NC=10, NG=60)
       IMPLICIT REAL*8 (A-H,O-Z)
-      REAL*8 X(NG),W(NG)
-      REAL*16 C(0:NC),R0V
+      REAL*8 X(NG),W(NG),C(0:NC)
       COMMON /CDROP/ C,R0V
-      C(0)=-0.0481 Q0
-      C(1)= 0.0359 Q0
-      C(2)=-0.1263 Q0
-      C(3)= 0.0244 Q0
-      C(4)= 0.0091 Q0
-      C(5)=-0.0099 Q0
-      C(6)= 0.0015 Q0
-      C(7)= 0.0025 Q0
-      C(8)=-0.0016 Q0
-      C(9)=-0.0002 Q0
-      C(10)= 0.0010 Q0
+      C(0)=-0.0481 D0
+      C(1)= 0.0359 D0
+      C(2)=-0.1263 D0
+      C(3)= 0.0244 D0
+      C(4)= 0.0091 D0
+      C(5)=-0.0099 D0
+      C(6)= 0.0015 D0
+      C(7)= 0.0025 D0
+      C(8)=-0.0016 D0
+      C(9)=-0.0002 D0
+      C(10)= 0.0010 D0
       CALL GAUSS (NG,0,0,X,W)
       S=0D0
       V=0D0
@@ -2259,7 +1906,7 @@ C********************************************************************
       RV=(V*3D0*0.25D0)**(1D0/3D0)
       IF (DABS(RAT-1D0).GT.1D-8) RAT=RV/RS
       R0V=1D0/RV
-      WRITE (6,1000) R0V
+      !WRITE (6,1000) R0V
       DO N=0,NC
          WRITE (6,1001) N,C(N)
       ENDDO
@@ -2277,7 +1924,7 @@ C    Z - DIVISION POINTS                                              *
 C    W - WEIGHTS                                                      *
 C**********************************************************************
  
-      SUBROUTINE GAUSS ( N,IND1,IND2,Z,W )
+      SUBROUTINE GAUSS (N,IND1,IND2,Z,W)
       IMPLICIT REAL*8 (A-H,P-Z)
       REAL*8 Z(N),W(N)
       A=1D0
