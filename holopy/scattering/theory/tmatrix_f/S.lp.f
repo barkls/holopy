@@ -997,8 +997,8 @@ C   changed from      INCLUDE 'amplq.par.f'
    11 NG1=DFLOAT(NGAUSS)/2D0
       NG2=NGAUSS-NG1
       XX=-DCOS(ATAN(EPS))
-      CALL DGAUSS(NG1,0,0,X1,W1)
-      CALL DGAUSS(NG2,0,0,X2,W2)
+      CALL GAUSS(NG1,0,0,X1,W1)
+      CALL GAUSS(NG2,0,0,X2,W2)
       DO 12 I=1,NG1
          W(I)=0.5D0*(XX+1D0)*W1(I)
          X(I)=0.5D0*(XX+1D0)*X1(I)+0.5D0*(XX-1D0)
