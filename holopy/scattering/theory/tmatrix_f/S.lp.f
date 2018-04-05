@@ -1022,71 +1022,7 @@ C   changed from      INCLUDE 'amplq.par.f'
    20 CONTINUE
       RETURN
       END
- 
-C***************************************************************
- 
-      SUBROUTINE QGAUSS ( N,IND1,IND2,Z,W )
-      IMPLICIT REAL*16 (A-H,P-Z)
-      REAL*16 Z(N),W(N)
-      A=1Q0
-      B=2Q0
-      C=3Q0
-      IND=MOD(N,2)
-      K=N/2+IND
-      F=FLOAT(N)
-      DO 100 I=1,K
-          M=N+1-I
-          IF(I.EQ.1) X=A-B/((F+A)*F)
-          IF(I.EQ.2) X=(Z(N)-A)*4Q0+Z(N)
-          IF(I.EQ.3) X=(Z(N-1)-Z(N))*1.6Q0+Z(N-1)
-          IF(I.GT.3) X=(Z(M+1)-Z(M+2))*C+Z(M+3)
-          IF(I.EQ.K.AND.IND.EQ.1) X=0Q0
-          NITER=0
-          CHECK=1Q-32
-   10     PB=1Q0
-          NITER=NITER+1
-          IF (NITER.LE.100) GO TO 15
-c         PRINT 5000, CHECK
-          CHECK=CHECK*10Q0
-   15     PC=X
-          DJ=A
-          DO 20 J=2,N
-              DJ=DJ+A
-              PA=PB
-              PB=PC
-   20         PC=X*PB+(X*PB-PA)*(DJ-A)/DJ
-          PA=A/((PB-X*PC)*F)
-          PB=PA*PC*(A-X*X)
-          X=X-PB
-          IF(ABS(PB).GT.CHECK*ABS(X)) GO TO 10
-          Z(M)=X
-          W(M)=PA*PA*(A-X*X)
-          IF(IND1.EQ.0) W(M)=B*W(M)
-          IF(I.EQ.K.AND.IND.EQ.1) GO TO 100
-          Z(I)=-Z(M)
-          W(I)=W(M)
-  100 CONTINUE
-C 5000 FORMAT ('QGAUSS DOES NOT CONVERGE, CHECK=',Q10.3)
-      IF(IND2.NE.1) GO TO 110
-      PRINT 1100,N
- 1100 FORMAT(' ***  POINTS AND WEIGHTS OF GAUSSIAN QUADRATURE FORMULA',
-     * ' OF ',I4,'-TH ORDER')
-      DO 105 I=1,K
-          ZZ=-Z(I)
-  105     PRINT 1200,I,ZZ,I,W(I)
- 1200 FORMAT(' ',4X,'X(',I4,') = ',F17.14,5X,'W(',I4,') = ',F17.14)
-      GO TO 115
-  110 CONTINUE
-C     PRINT 1300,N
- 1300 FORMAT(' GAUSSIAN QUADRATURE FORMULA OF ',I4,'-TH ORDER IS USED')
-  115 CONTINUE
-      IF(IND1.EQ.0) GO TO 140
-      DO 120 I=1,N
-  120     Z(I)=(A+Z(I))/B
-  140 CONTINUE
-      RETURN
-      END
- 
+
 C**********************************************************************
 C                                                                     *
 C   INPUT PARAMETERS:                                                 *
@@ -2056,7 +1992,7 @@ C   changed from      INCLUDE 'amplq.par.f'
       REAL*8 DV1(NPN1), DV2(NPN1)
       A=1D0
       QS=DSQRT(1D0-X*X)
-      QS1=1Q0/QS
+      QS1=1D0/QS
       DO 1 N=1,NMAX
          DV1(N)=0D0
          DV2(N)=0D0
