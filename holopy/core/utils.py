@@ -216,16 +216,16 @@ def choose_pool(parallel):
             "pass in parallel=None.")
     elif isinstance(parallel, int):
         pool = schwimmbad.MultiPool(parallel)
-    elif parallel is 'all':
+    elif parallel == 'all':
         threads = os.cpu_count()
         pool = choose_pool(threads)
-    elif parallel is 'mpi':
+    elif parallel == 'mpi':
         pool = schwimmbad.MPIPool()
         # need to kill all non-master instances of currently running script
         if not pool.is_master():
             pool.wait()
             sys.exit(0)
-    elif parallel is 'auto':
+    elif parallel == 'auto':
         # try mpi, otherwise go for multiprocessing
         if schwimmbad.MPIPool.enabled():
             pool = choose_pool('mpi')
